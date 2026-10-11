@@ -13,7 +13,14 @@ func main() {
 		w.Write([]byte(`{"status":"OK"}`))
 	})
 
-	err := http.ListenAndServe(":8000", nil)
+	s := http.Server{
+		Addr:         ":8000",
+		Handler:      mux,
+		ReadTimeout:  time.Second * 10,
+		WriteTimeout: time.Second * 40,
+		IdleTimeout:  time.Second * 60,
+	}
+	err := s.ListenAndServe()
 	if err != nil {
 		log.Fatalf("server failed: %v", err)
 	}
