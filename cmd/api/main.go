@@ -1,28 +1,29 @@
 package main
 
 import (
+	"backend/internal/config"
+	"backend/internal/handlers"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
 )
 
 func main() {
+	cfg := config.MustLoad()
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"OK"}`))
-	})
+	fmt.Println(("starting server"))
+	mux.HandleFunc("GET /healthz", handlers.Handler)
 
 	s := http.Server{
-		Addr:         ":8000",
+		Addr:         ":" + cfg.Port,
 		Handler:      mux,
 		ReadTimeout:  time.Second * 10,
 		WriteTimeout: time.Second * 40,
 		IdleTimeout:  time.Second * 60,
 	}
-	err := s.ListenAndServe()
-	if err != nil {
-		log.Fatalf("server failed: %v", err)
+	log.Printf("server is listening on %s", s.Addr)
+	if err := s.ListenAndServe(); err != nil {
+		log.Fatalf("server failed; %v", err)
 	}
 }
