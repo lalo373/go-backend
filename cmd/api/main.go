@@ -2,6 +2,7 @@ package main
 
 import (
 	"backend/internal/config"
+	"backend/internal/db"
 	"backend/internal/handlers"
 	"fmt"
 	"log"
@@ -11,8 +12,13 @@ import (
 
 func main() {
 	cfg := config.MustLoad()
-	mux := http.NewServeMux()
+	_, err := db.Connect(cfg.DBURL)
+	if err != nil {
+		log.Fatalf("main.db.connect: %v", err)
+	}
+	fmt.Println(("starting database"))
 	fmt.Println(("starting server"))
+	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", handlers.Handler)
 
 	s := http.Server{
