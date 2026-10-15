@@ -1,4 +1,4 @@
-.PHONY: build run migrate-up migrate-down
+.PHONY: build run migrate-up migrate-down migrate-force
 
 build:
 	@go build -o bin/api ./cmd/api
@@ -11,3 +11,6 @@ migrate-up:
 
 migrate-down:
 	@go run ./cmd/migrate down
+
+migrate-force:
+	@go run ./cmd/migrate force $(VERSION)
