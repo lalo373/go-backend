@@ -19,7 +19,8 @@ func main() {
 	fmt.Println(("starting database"))
 	fmt.Println(("starting server"))
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /healthz", handlers.Handler)
+	mux.HandleFunc("GET /healthz", handlers.HealthzHandler)
+	mux.HandleFunc("GET /listings", handlers.ListingsHandler)
 
 	s := http.Server{
 		Addr:         ":" + cfg.Port,
