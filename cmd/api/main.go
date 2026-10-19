@@ -18,9 +18,13 @@ func main() {
 	}
 	fmt.Println(("starting database"))
 	fmt.Println(("starting server"))
+	lh := handlers.NewListingsHandler(db)
+
 	mux := http.NewServeMux()
+	mux.HandleFunc("/", handlers.RootHandler)
 	mux.HandleFunc("GET /healthz", handlers.HealthzHandler)
-	mux.HandleFunc("GET /listings", handlers.ListingsHandler(db))
+	mux.HandleFunc("GET /listings", lh.ListingsHandler)
+	mux.HandleFunc("DELETE /listings/{id}", lh.DeleteListing)
 
 	s := http.Server{
 		Addr:         ":" + cfg.Port,
