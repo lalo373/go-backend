@@ -27,8 +27,8 @@ func NewListingsHandler(db *sql.DB) *ListingConstructor {
 }
 
 func (lc ListingConstructor) ListingsHandler(w http.ResponseWriter, r *http.Request) {
-
-	rows, err := lc.db.Query(
+	ctx := r.Context()
+	rows, err := lc.db.QueryContext(ctx,
 		`select id, title, description, price, city, created_at
 			from listings
 			order by created_at desc
@@ -68,17 +68,16 @@ func (lc ListingConstructor) ListingsHandler(w http.ResponseWriter, r *http.Requ
 }
 
 func (lc ListingConstructor) DeleteListing(w http.ResponseWriter, r *http.Request) {
-	
-		id := r.PathValue("id")
-		_, err := lc.db.Exec(
-			`delete from listings where id = $1`, id) // using placeholder to prevent sql injection
-		// defer db.Close()
-		if err != nil {
-			log.Printf("delete err : %v", err)
-			http.Error(w, "internal error", http.StatusInternalServerError)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(id + "deleted sucessfully"))
-	}
 
+	id := r.PathValue("id")
+	_, err := lc.db.Exec(
+		`delete from listings where id = $1`, id) // using placeholder to prevent sql injection
+	// defer db.Close()
+	if err != nil {
+		log.Printf("delete err : %v", err)
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(id + "deleted sucessfully"))
+}
