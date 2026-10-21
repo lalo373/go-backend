@@ -1,1 +1,15 @@
-{ "version": 2, "public": true, "rewrites": [ { "source": "/", "destination": "/static/index.html" }, { "source": "/static/(.*)", "destination": "/static/$1" } ] }
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/**/*.go",
+      "use": "@vercel/go"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "api/$1"
+    }
+  ]
+}
