@@ -1,12 +1,12 @@
 package main
 
 import (
+	"backend/internal/config"
 	"errors"
 	"log"
+	"log/slog"
 	"os"
 	"strconv"
-
-	"backend/internal/config"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -23,7 +23,7 @@ func main() {
 		cfg.DBURL,
 	)
 	if err != nil {
-		log.Fatalf("migration.new: %v", err)
+		slog.Error("migration.new: %v", err)
 	}
 	defer m.Close()
 

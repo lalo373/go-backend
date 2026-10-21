@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log"
+	"log/slog"
 	"net/http"
 	"time"
 )
@@ -34,7 +35,7 @@ func (lc ListingConstructor) ListingsHandler(w http.ResponseWriter, r *http.Requ
 			order by created_at desc
 			limit 100;`)
 	if err != nil {
-		log.Printf("query: %v", err)
+		slog.Error("query: %v", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
@@ -57,7 +58,7 @@ func (lc ListingConstructor) ListingsHandler(w http.ResponseWriter, r *http.Requ
 		listings = append(listings, lists)
 	}
 	if err := rows.Err(); err != nil {
-		log.Printf("rows.err: %v", err)
+		slog.Error("rows.err: %v", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
@@ -68,13 +69,15 @@ func (lc ListingConstructor) ListingsHandler(w http.ResponseWriter, r *http.Requ
 }
 
 func (lc ListingConstructor) DeleteListing(w http.ResponseWriter, r *http.Request) {
-
+	ctx := r.Context()
 	id := r.PathValue("id")
-	_, err := lc.db.Exec(
+	_, err := lc.db.ExecContext(ctx,
 		`delete from listings where id = $1`, id) // using placeholder to prevent sql injection
 	// defer db.Close()
 	if err != nil {
+
 		log.Printf("delete err : %v", err)
+		slog.Error("delete failed", "listing-id", id, "err", err, "remote-addr", r.RemoteAddr)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}

@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f6f2">
+  <title>MarketPlace</title>
+  <style>
+    :root {
+      --ink: #3f4144;
+      --muted: #888984;
+      --paper: #f7f6f2;
+      --card: #fffefa;
+      --line: #e8e6df;
+      --green: #617b60;
+      --green-dark: #486249;
+      --peach: #f0d2bf;
+      --lavender: #dcd8ed;
+      --yellow: #ead99f;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 76% 2%, rgba(234, 217, 159, .20), transparent 28rem),
+        var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button, input { font: inherit; }
+
+    button, a { -webkit-tap-highlight-color: transparent; }
+
+    .topbar {
+      width: min(1320px, calc(100% - 48px));
+      height: 82px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(63, 65, 68, .11);
+    }
+
+    .brand {
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 750;
+      letter-spacing: -.04em;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 11px;
+      color: white;
+      background: var(--green);
+      font-size: 16px;
+    }
+
+    .header-note {
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .menu-toggle {
+      position: relative;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      background: var(--card);
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .hamburger, .hamburger::before, .hamburger::after {
+      display: block;
+      width: 17px;
+      height: 1.5px;
+      border-radius: 2px;
+      background: currentColor;
+      transition: transform .25s ease, top .25s ease;
+    }
+
+    .hamburger { position: relative; }
+    .hamburger::before, .hamburger::after {
+      position: absolute;
+      left: 0;
+      content: "";
+    }
+    .hamburger::before { top: -5px; }
+    .hamburger::after { top: 5px; }
+
+    .menu-toggle[aria-expanded="true"] .hamburger { background: transparent; }
+    .menu-toggle[aria-expanded="true"] .hamburger::before { top: 0; transform: rotate(45deg); }
+    .menu-toggle[aria-expanded="true"] .hamburger::after { top: 0; transform: rotate(-45deg); }
+
+    .menu-panel {
+      position: fixed;
+      z-index: 15;
+      top: 18px;
+      right: 18px;
+      width: min(370px, calc(100vw - 36px));
+      padding: 78px 26px 26px;
+      border: 1px solid var(--line);
+      border-radius: 23px;
+      background: rgba(255, 254, 250, .97);
+      box-shadow: 0 24px 80px rgba(40, 40, 30, .16);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-8px) scale(.98);
+      transform-origin: top right;
+      transition: opacity .22s ease, transform .22s ease;
+    }
+
+    .menu-panel.open {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
+    }
+
+    .menu-eyebrow {
+      margin: 0 0 13px;
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .menu-links { display: grid; gap: 7px; }
+
+    .menu-links a {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 13px 14px;
+      border-radius: 12px;
+      color: var(--ink);
+      text-decoration: none;
+      transition: background .18s ease, transform .18s ease;
+    }
+
+    .menu-links a:hover {
+      background: #f1f0e9;
+      transform: translateX(3px);
+    }
+
+    .menu-links small {
+      color: var(--muted);
+      font: 11px ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .hero {
+      width: min(1320px, calc(100% - 48px));
+      min-height: 590px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(360px, .95fr);
+      align-items: center;
+      gap: 48px;
+      padding: 65px 0 74px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0 0 22px;
+      color: var(--green-dark);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #8da184;
+      content: "";
+    }
+
+    h1 {
+      max-width: 690px;
+      margin: 0;
+      color: #444649;
+      font-size: clamp(52px, 7.1vw, 100px);
+      font-weight: 650;
+      letter-spacing: -.075em;
+      line-height: .98;
+    }
+
+    .warp-word { display: inline-block; white-space: nowrap; }
+    .warp-char {
+      display: inline-block;
+      transform-origin: 50% 65%;
+      transition: transform .15s ease-out;
+      will-change: transform;
+    }
+
+    .hero-copy {
+      max-width: 475px;
+      margin: 24px 0 0;
+      color: #777873;
+      font-size: 16px;
+      line-height: 1.75;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      margin-top: 31px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 48px;
+      padding: 0 20px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 650;
+      transition: transform .2s ease, background .2s ease;
+    }
+
+    .button:hover { transform: translateY(-2px); }
+    .button-primary { color: white; background: var(--green); }
+    .button-primary:hover { background: var(--green-dark); }
+    .button-secondary { color: var(--ink); border-color: var(--line); background: var(--card); }
+
+    .arrow { font-size: 16px; }
+
+    .hero-art {
+      position: relative;
+      min-height: 405px;
+      display: grid;
+      place-items: center;
+    }
+
+    .art-shadow {
+      position: absolute;
+      width: 76%;
+      height: 71%;
+      border-radius: 46% 54% 52% 48%;
+      background: #ece8dc;
+      transform: rotate(-9deg);
+    }
+
+    .art-circle {
+      position: absolute;
+      width: 74%;
+      aspect-ratio: 1;
+      border: 1px solid rgba(63, 65, 68, .13);
+      border-radius: 50%;
+    }
+
+    .art-circle::before, .art-circle::after {
+      position: absolute;
+      border: 1px solid rgba(63, 65, 68, .11);
+      border-radius: 50%;
+      content: "";
+    }
+
+    .art-circle::before { inset: 12%; }
+    .art-circle::after { inset: 24%; }
+
+    .art-card {
+      position: relative;
+      z-index: 1;
+      width: min(290px, 72%);
+      aspect-ratio: .83;
+      padding: 17px;
+      border: 1px solid rgba(63, 65, 68, .1);
+      border-radius: 22px;
+      background: var(--card);
+      box-shadow: 0 25px 70px rgba(62, 60, 49, .16);
+      transform: rotate(5deg);
+      animation: float 5s ease-in-out infinite;
+    }
+
+    .art-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .art-image {
+      position: relative;
+      height: 66%;
+      margin-top: 15px;
+      overflow: hidden;
+      border-radius: 15px;
+      background: linear-gradient(145deg, #d5c9ad 0%, #e7dbc7 43%, #9aa18a 100%);
+    }
+
+    .art-image::before {
+      position: absolute;
+      width: 60%;
+      height: 83%;
+      right: -1%;
+      bottom: -12%;
+      border-radius: 50% 50% 10% 10%;
+      background: #64745e;
+      content: "";
+      transform: rotate(-17deg);
+    }
+
+    .art-image::after {
+      position: absolute;
+      width: 36%;
+      height: 58%;
+      left: 11%;
+      bottom: -13%;
+      border-radius: 48% 48% 8% 8%;
+      background: #d2a480;
+      content: "";
+      transform: rotate(15deg);
+    }
+
+    .art-card-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      padding: 15px 2px 0;
+    }
+
+    .art-card-bottom strong { font-size: 13px; }
+    .art-card-bottom span { color: var(--muted); font-size: 11px; }
+
+    .art-tag {
+      position: absolute;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 14px;
+      border: 1px solid rgba(63, 65, 68, .08);
+      border-radius: 999px;
+      background: var(--card);
+      box-shadow: 0 10px 28px rgba(62, 60, 49, .1);
+      color: var(--ink);
+      font-size: 11px;
+      font-weight: 650;
+    }
+
+    .art-tag.one { top: 14%; right: 2%; }
+    .art-tag.two { left: 0; bottom: 18%; }
+    .tag-dot { width: 8px; height: 8px; border-radius: 50%; background: #a7b497; }
+    .art-tag.two .tag-dot { background: #d3a687; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(5deg); }
+      50% { transform: translateY(-10px) rotate(3deg); }
+    }
+
+    .catalog {
+      width: min(1320px, calc(100% - 48px));
+      margin: 0 auto;
+      padding: 32px 0 86px;
+      border-top: 1px solid rgba(63, 65, 68, .11);
+    }
+
+    .catalog-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 25px;
+    }
+
+    .catalog-head h2 {
+      margin: 0;
+      font-size: clamp(25px, 3vw, 36px);
+      font-weight: 600;
+      letter-spacing: -.055em;
+    }
+
+    .catalog-head p {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .search {
+      width: min(260px, 42vw);
+      min-height: 43px;
+      padding: 0 15px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      outline: none;
+      background: var(--card);
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .search:focus { border-color: #a6b29b; }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .product {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: var(--card);
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .product:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 15px 35px rgba(62, 60, 49, .09);
+    }
+
+    .product-image {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 205px;
+      overflow: hidden;
+      background: var(--product-color, var(--peach));
+    }
+
+    .product-image span {
+      display: grid;
+      place-items: center;
+      width: 116px;
+      height: 116px;
+      border-radius: 50%;
+      background: rgba(255, 254, 250, .65);
+      font-size: 48px;
+      transition: transform .3s ease;
+    }
+
+    .product:hover .product-image span { transform: scale(1.08) rotate(-5deg); }
+
+    .product-info {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 15px 16px 17px;
+    }
+
+    .product-info h3 { margin: 0; font-size: 13px; font-weight: 650; }
+    .product-info p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+    .price { white-space: nowrap; font-size: 13px; font-weight: 700; }
+
+    .status {
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    footer {
+      padding: 20px 24px 28px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      text-align: center;
+      font-size: 11px;
+    }
+
+    @media (max-width: 850px) {
+      .hero {
+        min-height: auto;
+        grid-template-columns: 1fr 0.8fr;
+        gap: 15px;
+        padding: 72px 0 58px;
+      }
+      .hero-art { min-height: 340px; }
+      .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 600px) {
+      .topbar, .hero, .catalog { width: min(100% - 34px, 1320px); }
+      .topbar { height: 70px; }
+      .header-note { display: none; }
+      .hero { grid-template-columns: 1fr; padding: 62px 0 40px; }
+      h1 { font-size: clamp(52px, 13vw, 76px); }
+      .hero-copy { font-size: 14px; }
+      .hero-art { min-height: 310px; margin-top: 5px; }
+      .art-card { width: 220px; }
+      .catalog { padding-top: 25px; }
+      .catalog-head { align-items: start; flex-direction: column; }
+      .search { width: 100%; }
+      .product-grid { gap: 11px; }
+      .product-image { min-height: 150px; }
+      .product-image span { width: 88px; height: 88px; font-size: 38px; }
+      .product-info { padding: 12px; }
+      .art-tag.one { right: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="MarketPlace home">
+      <span class="brand-mark">m</span>
+      <span>MarketPlace</span>
+    </a>
+    <span class="header-note">Thoughtful finds, all in one place</span>
+    <button class="menu-toggle" id="menuToggle" aria-label="Open navigation menu" aria-expanded="false">
+      <span class="hamburger"></span>
+    </button>
+  </header>
+
+  <nav class="menu-panel" id="menuPanel" aria-label="Backend handlers">
+    <p class="menu-eyebrow">Backend handlers</p>
+    <div class="menu-links" id="menuLinks"></div>
+  </nav>
+
+  <main id="top">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">A little more considered</p>
+        <h1 id="warpHeading" aria-label="Welcome to MarketPlace"></h1>
+        <p class="hero-copy">
+          Discover useful things, lovely details, and everyday favorites from independent sellers.
+          A welcoming place to find your next favorite.
+        </p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#products">Explore the collection <span class="arrow">↗</span></a>
+          <a class="button button-secondary" href="#products">Browse finds</a>
+        </div>
+      </div>
+
+      <div class="hero-art" aria-hidden="true">
+        <div class="art-shadow"></div>
+        <div class="art-circle"></div>
+        <div class="art-card">
+          <div class="art-card-top"><span>Editor's pick</span><span>01 / 04</span></div>
+          <div class="art-image"></div>
+          <div class="art-card-bottom">
+            <div><strong>Objects with a story</strong><br><span>Made to be kept</span></div>
+            <strong>↗</strong>
+          </div>
+        </div>
+        <div class="art-tag one"><span class="tag-dot"></span> Curated with care</div>
+        <div class="art-tag two"><span class="tag-dot"></span> Good things, found</div>
+      </div>
+    </section>
+
+    <section class="catalog" id="products">
+      <div class="catalog-head">
+        <div>
+          <h2>Find something lovely</h2>
+          <p>A few good things to get you started.</p>
+        </div>
+        <input class="search" id="searchInput" type="search" placeholder="Search the collection…" aria-label="Search products">
+      </div>
+
+      <div class="product-grid" id="productGrid"></div>
+      <p class="status" id="loadStatus" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <footer>MarketPlace · Find good things, from good people.</footer>
+
+  <script>
+    /*
+      Set API_BASE if the frontend and Go API use different origins, for example:
+      const API_BASE = "http://localhost:8080";
+
+      Replace these sample paths with the exact method/path pairs from main.go.
+      Menu links navigate directly to the configured handler URLs.
+    */
+    const API_BASE = "";
+
+    const API_ROUTES = [
+      { label: "Products", method: "GET", path: "/products" },
+      { label: "Categories", method: "GET", path: "/categories" },
+      { label: "Users", method: "GET", path: "/users" },
+      { label: "Orders", method: "GET", path: "/orders" }
+    ];
+
+    const demoProducts = [
+      { name: "Everyday ceramic", category: "Home & living", price: "$28", emoji: "🏺", color: "#e9d8c6" },
+      { name: "Soft-knit tote", category: "Accessories", price: "$34", emoji: "👜", color: "#dce2d4" },
+      { name: "Sunday reading", category: "Books & paper", price: "$18", emoji: "📚", color: "#e4def0" },
+      { name: "Little green friend", category: "Home & living", price: "$22", emoji: "🪴", color: "#e8dfb9" }
+    ];
+
+    const menuToggle = document.getElementById("menuToggle");
+    const menuPanel = document.getElementById("menuPanel");
+    const menuLinks = document.getElementById("menuLinks");
+    const productGrid = document.getElementById("productGrid");
+    const statusText = document.getElementById("loadStatus");
+    const searchInput = document.getElementById("searchInput");
+
+    function routeUrl(path) {
+      return `${API_BASE}${path}`;
+    }
+
+    API_ROUTES.forEach((route) => {
+      const link = document.createElement("a");
+      link.href = routeUrl(route.path);
+      link.innerHTML = `<span>${route.label}</span><small>${route.method} ${route.path}</small>`;
+      menuLinks.appendChild(link);
+    });
+
+    menuToggle.addEventListener("click", () => {
+      const isOpen = menuToggle.getAttribute("aria-expanded") === "true";
+      menuToggle.setAttribute("aria-expanded", String(!isOpen));
+      menuPanel.classList.toggle("open", !isOpen);
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!menuPanel.contains(event.target) && !menuToggle.contains(event.target)) {
+        menuToggle.setAttribute("aria-expanded", "false");
+        menuPanel.classList.remove("open");
+      }
+    });
+
+    function makeWarpHeadline(text) {
+      const heading = document.getElementById("warpHeading");
+      const words = text.split(" ");
+      heading.innerHTML = words.map((word) =>
+        `<span class="warp-word">${Array.from(word).map((char) =>
+          `<span class="warp-char">${char}</span>`
+        ).join("")}</span>`
+      ).join(" ");
+    }
+
+    makeWarpHeadline("Welcome to MarketPlace");
+
+    const heading = document.getElementById("warpHeading");
+    heading.addEventListener("pointermove", (event) => {
+      const chars = heading.querySelectorAll(".warp-char");
+      const bounds = heading.getBoundingClientRect();
+
+      chars.forEach((char) => {
+        const rect = char.getBoundingClientRect();
+        const dx = event.clientX - (rect.left + rect.width / 2);
+        const dy = event.clientY - (rect.top + rect.height / 2);
+        const distance = Math.hypot(dx, dy);
+        const influence = Math.max(0, 1 - distance / 150);
+        char.style.transform =
+          `translate(${(-dx * influence * .10).toFixed(1)}px, ${(-dy * influence * .12).toFixed(1)}px) ` +
+          `rotate(${(dx * influence * .025).toFixed(2)}deg) scale(${(1 + influence * .08).toFixed(3)})`;
+      });
+    });
+
+    heading.addEventListener("pointerleave", () => {
+      heading.querySelectorAll(".warp-char").forEach((char) => {
+        char.style.transform = "";
+      });
+    });
+
+    function normalizeProducts(data) {
+      if (Array.isArray(data)) return data;
+      if (data && Array.isArray(data.products)) return data.products;
+      if (data && Array.isArray(data.items)) return data.items;
+      return null;
+    }
+
+    function renderProducts(products) {
+      productGrid.innerHTML = "";
+
+      products.forEach((item, index) => {
+        const product = document.createElement("article");
+        product.className = "product";
+
+        const name = item.name || item.title || item.product_name || "Marketplace find";
+        const category = item.category || item.category_name || "Discover";
+        const price = item.price != null ? `$${item.price}` : "View item";
+        const emoji = item.emoji || ["🏺", "👜", "📚", "🪴"][index % 4];
+        const color = item.color || ["#e9d8c6", "#dce2d4", "#e4def0", "#e8dfb9"][index % 4];
+
+        product.innerHTML = `
+          <div class="product-image" style="--product-color:${color}">
+            <span aria-hidden="true">${emoji}</span>
+          </div>
+          <div class="product-info">
+            <div><h3></h3><p></p></div>
+            <span class="price"></span>
+          </div>`;
+        product.querySelector("h3").textContent = name;
+        product.querySelector("p").textContent = category;
+        product.querySelector(".price").textContent = price;
+        productGrid.appendChild(product);
+      });
+
+      applySearch();
+    }
+
+    function applySearch() {
+      const query = searchInput.value.trim().toLowerCase();
+      productGrid.querySelectorAll(".product").forEach((card) => {
+        card.hidden = !card.textContent.toLowerCase().includes(query);
+      });
+    }
+
+    searchInput.addEventListener("input", applySearch);
+    renderProducts(demoProducts);
+
+    const productsRoute = API_ROUTES.find((route) => route.label.toLowerCase() === "products");
+    if (productsRoute) {
+      fetch(routeUrl(productsRoute.path), { headers: { "Accept": "application/json" } })
+        .then((response) => {
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return response.json();
+        })
+        .then((data) => {
+          const products = normalizeProducts(data);
+          if (!products) throw new Error("Unexpected products response format");
+          renderProducts(products);
+          statusText.textContent = "Showing products from the backend.";
+        })
+        .catch(() => {
+          statusText.textContent = "Showing sample products. Check API_ROUTES and your backend response format to connect live data.";
+        });
+    }
+  </script>
+</body>
+</html>
