@@ -18,12 +18,14 @@ type listing struct {
 	CreatedAt   time.Time `json:"ad-created"`
 }
 type ListingConstructor struct {
-	db *sql.DB
+	db     *sql.DB
+	logger *slog.Logger
 }
 
-func NewListingsHandler(db *sql.DB) *ListingConstructor {
+func NewListingsHandler(db *sql.DB, logger *slog.Logger) *ListingConstructor {
 	return &ListingConstructor{
-		db: db,
+		db:     db,
+		logger: logger,
 	}
 }
 
@@ -77,7 +79,7 @@ func (lc ListingConstructor) DeleteListing(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 
 		log.Printf("delete err : %v", err)
-		slog.Error("delete failed", "listing-id", id, "err", err, "remote-addr", r.RemoteAddr)
+		lc.logger.Error("delete failed", "listing-id", id, "err", err, "remote-addr", r.RemoteAddr)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}

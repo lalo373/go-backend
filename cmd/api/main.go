@@ -4,6 +4,7 @@ import (
 	"backend/internal/config"
 	"backend/internal/db"
 	"backend/internal/handlers"
+	"backend/middlewear"
 	"backend/static"
 	"fmt"
 	"log"
@@ -14,10 +15,11 @@ import (
 )
 
 func main() {
-	slog_json_handler := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+	slog_json_handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		AddSource: true,
-	}))
-	slog.SetDefault(slog_json_handler)
+	})
+	sloglogger := slog.New(slog_json_handler)
+	slog.SetDefault(sloglogger)
 	cfg := config.MustLoad()
 	db, err := db.Connect(cfg.DBURL)
 	if err != nil {
@@ -25,7 +27,7 @@ func main() {
 	}
 	fmt.Println(("starting database"))
 	fmt.Println(("starting server"))
-	lh := handlers.NewListingsHandler(db)
+	lh := handlers.NewListingsHandler(db, sloglogger)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
@@ -36,9 +38,10 @@ func main() {
 	mux.HandleFunc("GET /listings", lh.ListingsHandler)
 	mux.HandleFunc("DELETE /listings/{id}", lh.DeleteListing)
 
+	middlewearHandler := middlewear.RequestID(mux)
 	s := http.Server{
 		Addr:         ":" + cfg.Port,
-		Handler:      mux,
+		Handler:      middlewearHandler,
 		ReadTimeout:  time.Second * 10,
 		WriteTimeout: time.Second * 40,
 		IdleTimeout:  time.Second * 60,
