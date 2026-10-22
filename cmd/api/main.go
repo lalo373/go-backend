@@ -4,6 +4,7 @@ import (
 	"backend/internal/config"
 	"backend/internal/db"
 	"backend/internal/handlers"
+	"backend/static"
 	"fmt"
 	"log"
 	"log/slog"
@@ -27,7 +28,10 @@ func main() {
 	lh := handlers.NewListingsHandler(db)
 
 	mux := http.NewServeMux()
-	mux.Handle("/", http.FileServer(http.Dir("./static")))
+	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Write(static.Index)
+	})
 	mux.HandleFunc("GET /healthz", handlers.HealthzHandler)
 	mux.HandleFunc("GET /listings", lh.ListingsHandler)
 	mux.HandleFunc("DELETE /listings/{id}", lh.DeleteListing)
