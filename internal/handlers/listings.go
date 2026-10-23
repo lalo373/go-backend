@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"backend/middlewear"
 	"database/sql"
 	"encoding/json"
 	"log"
@@ -72,6 +73,7 @@ func (lc ListingConstructor) ListingsHandler(w http.ResponseWriter, r *http.Requ
 
 func (lc ListingConstructor) DeleteListing(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	requestID := middlewear.RequestIDFromContext(ctx)
 	id := r.PathValue("id")
 	_, err := lc.db.ExecContext(ctx,
 		`delete from listings where id = $1`, id) // using placeholder to prevent sql injection
@@ -79,7 +81,7 @@ func (lc ListingConstructor) DeleteListing(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 
 		log.Printf("delete err : %v", err)
-		lc.logger.Error("delete failed", "listing-id", id, "err", err, "remote-addr", r.RemoteAddr)
+		lc.logger.Error("delete failed", "listing-id", id, "err", err, "remote-addr", r.RemoteAddr, "request-ID", requestID)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
