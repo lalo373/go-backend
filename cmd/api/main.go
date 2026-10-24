@@ -11,6 +11,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -37,7 +38,16 @@ func main() {
 		w.Write(static.Index)
 	})
 	mux.HandleFunc("GET /healthz", handlers.HealthzHandler)
-	mux.HandleFunc("GET /listings", lh.ListingsHandler)
+	// Browsers navigating to /listings get the frontend; API callers
+	// (Accept: application/json or */*) get the JSON listing data.
+	mux.HandleFunc("GET /listings", func(w http.ResponseWriter, r *http.Request) {
+		if strings.Contains(r.Header.Get("Accept"), "text/html") {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Write(static.Index)
+			return
+		}
+		lh.ListingsHandler(w, r)
+	})
 	mux.HandleFunc("DELETE /listings/{id}", lh.DeleteListing)
 
 	middlewearHandler := middlewear.RequestID(mux)
