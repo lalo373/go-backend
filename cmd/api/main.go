@@ -30,7 +30,9 @@ func main() {
 	lh := handlers.NewListingsHandler(db, sloglogger)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
+	// Serve the embedded frontend for every path; more specific
+	// patterns (healthz, listings) still take precedence.
+	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Write(static.Index)
 	})

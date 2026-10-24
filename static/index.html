@@ -471,7 +471,8 @@
     }
 
     .product-info h3 { margin: 0; font-size: 13px; font-weight: 650; }
-    .product-info p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+    .product-info p { margin: 5px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .product-meta { display: block; margin-top: 5px; color: var(--muted); font-size: 10px; letter-spacing: .04em; }
     .price { white-space: nowrap; font-size: 13px; font-weight: 700; }
 
     .status {
@@ -596,24 +597,19 @@
     /*
       Set API_BASE if the frontend and Go API use different origins, for example:
       const API_BASE = "http://localhost:8080";
-
-      Replace these sample paths with the exact method/path pairs from main.go.
-      Menu links navigate directly to the configured handler URLs.
     */
     const API_BASE = "";
 
     const API_ROUTES = [
-      { label: "Products", method: "GET", path: "/products" },
-      { label: "Categories", method: "GET", path: "/categories" },
-      { label: "Users", method: "GET", path: "/users" },
-      { label: "Orders", method: "GET", path: "/orders" }
+      { label: "Listings", method: "GET", path: "/listings" },
+      { label: "Health check", method: "GET", path: "/healthz" }
     ];
 
     const demoProducts = [
-      { name: "Everyday ceramic", category: "Home & living", price: "$28", emoji: "🏺", color: "#e9d8c6" },
-      { name: "Soft-knit tote", category: "Accessories", price: "$34", emoji: "👜", color: "#dce2d4" },
-      { name: "Sunday reading", category: "Books & paper", price: "$18", emoji: "📚", color: "#e4def0" },
-      { name: "Little green friend", category: "Home & living", price: "$22", emoji: "🪴", color: "#e8dfb9" }
+      { "ad-title": "Everyday ceramic", "ad-description": "Hand-thrown mug for slow mornings.", "ad-price": "2500", "ad-city": "Pune" },
+      { "ad-title": "Soft-knit tote", "ad-description": "Everyday carry-all in undyed cotton.", "ad-price": "3400", "ad-city": "Jaipur" },
+      { "ad-title": "Sunday reading", "ad-description": "A small stack of well-loved paperbacks.", "ad-price": "1800", "ad-city": "Kochi" },
+      { "ad-title": "Little green friend", "ad-description": "Easy-care plant in a terracotta pot.", "ad-price": "1200", "ad-city": "Chennai" }
     ];
 
     const menuToggle = document.getElementById("menuToggle");
@@ -684,9 +680,16 @@
 
     function normalizeProducts(data) {
       if (Array.isArray(data)) return data;
+      if (data && Array.isArray(data.listings)) return data.listings;
       if (data && Array.isArray(data.products)) return data.products;
-      if (data && Array.isArray(data.items)) return data.items;
       return null;
+    }
+
+    function formatPrice(value) {
+      if (value == null || value === "") return "View item";
+      const amount = Number(value);
+      if (Number.isFinite(amount)) return `₹${amount.toLocaleString("en-IN")}`;
+      return String(value);
     }
 
     function renderProducts(products) {
@@ -696,9 +699,17 @@
         const product = document.createElement("article");
         product.className = "product";
 
-        const name = item.name || item.title || item.product_name || "Marketplace find";
-        const category = item.category || item.category_name || "Discover";
-        const price = item.price != null ? `$${item.price}` : "View item";
+        const name = item["ad-title"] || item.title || item.name || "Marketplace find";
+        const description = item["ad-description"] || item.description || "";
+        const city = item["ad-city"] || item.city || "";
+        const created = item["ad-created"] || item.created || "";
+        const createdText = created
+          ? new Date(created).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+          : "";
+        const meta = [city, createdText].filter(Boolean).join(" · ");
+        const price = item["ad-price"] != null ? formatPrice(item["ad-price"])
+          : item.price != null ? `$${item.price}`
+          : "View item";
         const emoji = item.emoji || ["🏺", "👜", "📚", "🪴"][index % 4];
         const color = item.color || ["#e9d8c6", "#dce2d4", "#e4def0", "#e8dfb9"][index % 4];
 
@@ -707,11 +718,12 @@
             <span aria-hidden="true">${emoji}</span>
           </div>
           <div class="product-info">
-            <div><h3></h3><p></p></div>
+            <div><h3></h3><p></p><small class="product-meta"></small></div>
             <span class="price"></span>
           </div>`;
         product.querySelector("h3").textContent = name;
-        product.querySelector("p").textContent = category;
+        product.querySelector("p").textContent = description;
+        product.querySelector(".product-meta").textContent = meta;
         product.querySelector(".price").textContent = price;
         productGrid.appendChild(product);
       });
@@ -729,23 +741,21 @@
     searchInput.addEventListener("input", applySearch);
     renderProducts(demoProducts);
 
-    const productsRoute = API_ROUTES.find((route) => route.label.toLowerCase() === "products");
-    if (productsRoute) {
-      fetch(routeUrl(productsRoute.path), { headers: { "Accept": "application/json" } })
-        .then((response) => {
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          return response.json();
-        })
-        .then((data) => {
-          const products = normalizeProducts(data);
-          if (!products) throw new Error("Unexpected products response format");
-          renderProducts(products);
-          statusText.textContent = "Showing products from the backend.";
-        })
-        .catch(() => {
-          statusText.textContent = "Showing sample products. Check API_ROUTES and your backend response format to connect live data.";
-        });
-    }
+    const listingsRoute = { path: "/listings" };
+    fetch(routeUrl(listingsRoute.path), { headers: { "Accept": "application/json" } })
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then((data) => {
+        const listings = normalizeProducts(data);
+        if (!listings) throw new Error("Unexpected listings response format");
+        renderProducts(listings);
+        statusText.textContent = `Showing ${listings.length} listing${listings.length === 1 ? "" : "s"} from the backend.`;
+      })
+      .catch(() => {
+        statusText.textContent = "Showing sample products. Check GET /listings and your backend response format to connect live data.";
+      });
   </script>
 </body>
 </html>
