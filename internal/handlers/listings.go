@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"backend/internal/httpx"
 	"backend/middlewear"
 	"database/sql"
 	"encoding/json"
@@ -39,7 +40,8 @@ func (lc ListingConstructor) ListingsHandler(w http.ResponseWriter, r *http.Requ
 			limit 100;`)
 	if err != nil {
 		slog.Error("query: %v", err)
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		httpx.Error(w, http.StatusInternalServerError, "Internal error", string(httpx.Code_internal_error))
+
 		return
 	}
 	defer rows.Close()
@@ -55,14 +57,14 @@ func (lc ListingConstructor) ListingsHandler(w http.ResponseWriter, r *http.Requ
 			&lists.CreatedAt,
 		); err != nil {
 			log.Printf("rows scan error: %v", err)
-			http.Error(w, "internal error", http.StatusInternalServerError)
+			httpx.Error(w, http.StatusInternalServerError, "Internal error", string(httpx.Code_internal_error))
 			return
 		}
 		listings = append(listings, lists)
 	}
 	if err := rows.Err(); err != nil {
 		slog.Error("rows.err: %v", err)
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		httpx.Error(w, http.StatusInternalServerError, "Internal error", string(httpx.Code_internal_error))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -82,7 +84,8 @@ func (lc ListingConstructor) DeleteListing(w http.ResponseWriter, r *http.Reques
 
 		log.Printf("delete err : %v", err)
 		lc.logger.Error("delete failed", "listing-id", id, "err", err, "remote-addr", r.RemoteAddr, "request-ID", requestID)
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		// http.Error(w, "internal error", http.StatusInternalServerError)
+		httpx.Error(w, http.StatusInternalServerError, "Internal error", string(httpx.Code_internal_error))
 		return
 	}
 	w.WriteHeader(http.StatusOK)
