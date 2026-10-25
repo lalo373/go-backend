@@ -15,7 +15,7 @@ type listing struct {
 	ID          string    `json:"id"`
 	Title       string    `json:"ad-title"`
 	Description string    `json:"ad-description"`
-	Price       string    `json:"ad-price"`
+	Price       uint64    `json:"ad-price"`
 	City        string    `json:"ad-city"`
 	CreatedAt   time.Time `json:"ad-created"`
 }
@@ -39,7 +39,7 @@ func (lc ListingConstructor) ListingsHandler(w http.ResponseWriter, r *http.Requ
 			order by created_at desc
 			limit 100;`)
 	if err != nil {
-		slog.Error("query: %v", err)
+		slog.Error("query", "err", err)
 		httpx.Error(w, http.StatusInternalServerError, "Internal error", httpx.Code_internal_error)
 
 		return
@@ -63,7 +63,7 @@ func (lc ListingConstructor) ListingsHandler(w http.ResponseWriter, r *http.Requ
 		listings = append(listings, lists)
 	}
 	if err := rows.Err(); err != nil {
-		slog.Error("rows.err: %v", err)
+		slog.Error("rows.err", "err", err)
 		httpx.Error(w, http.StatusInternalServerError, "Internal error", httpx.Code_internal_error)
 		return
 	}
@@ -90,4 +90,28 @@ func (lc ListingConstructor) DeleteListing(w http.ResponseWriter, r *http.Reques
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(id + "deleted sucessfully"))
+}
+
+func (lc ListingConstructor) Create(w http.ResponseWriter, r *http.Request) {
+	var req listing
+	reqID := middlewear.RequestIDFromContext(r.Context())
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		lc.logger.Error("failed to decode", "request_id", reqID, "error", err)
+		httpx.Error(w, http.StatusBadRequest, "invalid Body", httpx.Code_malformed_json)
+		return
+	}
+	row := lc.db.QueryRowContext(r.Context(), `
+		INSERT INTO listings
+		(title, description, price, city)
+		VALUES ($1, $2, $3, $4) RETURNING id`, req.Title, req.Description, req.Price, req.City)
+	id := ""
+	if err := row.Scan(&id); err != nil {
+		lc.logger.Error("failed to insert", "request_id", reqID, "error", err)
+		httpx.Error(w, http.StatusInternalServerError, "Something Went Wrong", httpx.Code_internal_error)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(map[string]string{"id": id})
+
 }

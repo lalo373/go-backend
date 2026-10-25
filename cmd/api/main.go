@@ -5,7 +5,6 @@ import (
 	"backend/internal/db"
 	"backend/internal/handlers"
 	"backend/middlewear"
-	"backend/static"
 	"fmt"
 	"log"
 	"log/slog"
@@ -34,12 +33,12 @@ func main() {
 	// patterns (healthz, listings) still take precedence.
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.Write(static.Index)
+		w.Write([]byte("status OK"))
 	})
 	mux.HandleFunc("GET /healthz", handlers.HealthzHandler)
 	mux.HandleFunc("GET /listings", lh.ListingsHandler)
 	mux.HandleFunc("DELETE /listings/{id}", lh.DeleteListing)
-
+	mux.HandleFunc("POST /listings", lh.Create)
 	middlewearHandler := middlewear.RequestID(mux)
 	s := http.Server{
 		Addr:         ":" + cfg.Port,

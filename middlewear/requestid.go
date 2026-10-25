@@ -23,12 +23,14 @@ func RequestID(next http.Handler) http.Handler {
 			id = uuid.NewString()
 		}
 		w.Header().Add(requestId, id)
-		ctx := context.WithValue(r.Context(), "requestCtxId", id)
+		ctx := context.WithValue(r.Context(), requestIDKey, id)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
 func RequestIDFromContext(ctx context.Context) string {
-	requestID := ctx.Value(requestIDKey).(string)
-	return requestID
+	if id, ok := ctx.Value(requestIDKey).(string); ok {
+		return id
+	}
+	return ""
 }

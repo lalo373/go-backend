@@ -23,7 +23,8 @@ func main() {
 		cfg.DBURL,
 	)
 	if err != nil {
-		slog.Error("migration.new: %v", err)
+		slog.Error("migration.new", "err", err)
+		os.Exit(1)
 	}
 	defer m.Close()
 
