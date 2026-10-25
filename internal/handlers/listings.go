@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"backend/internal/handlers"
 	"backend/internal/httpx"
 	"backend/middlewear"
 	"database/sql"
@@ -93,25 +94,31 @@ func (lc ListingConstructor) DeleteListing(w http.ResponseWriter, r *http.Reques
 }
 
 func (lc ListingConstructor) Create(w http.ResponseWriter, r *http.Request) {
-	var req listing
+	var req handlers.CreateListingReqReader
 	reqID := middlewear.RequestIDFromContext(r.Context())
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		lc.logger.Error("failed to decode", "request_id", reqID, "error", err)
 		httpx.Error(w, http.StatusBadRequest, "invalid Body", httpx.Code_malformed_json)
 		return
 	}
+	if req.Title == "" || req.Description == "" || req.City == "" || req.Price == 0 {
+		httpx.Error(w, http.StatusBadRequest,
+			"title, description, price and city are required; send keys ad-title, ad-description, ad-price, ad-city",
+			httpx.Code_validation_failed)
+		return
+	}
 	row := lc.db.QueryRowContext(r.Context(), `
 		INSERT INTO listings
 		(title, description, price, city)
 		VALUES ($1, $2, $3, $4) RETURNING id`, req.Title, req.Description, req.Price, req.City)
-	id := ""
-	if err := row.Scan(&id); err != nil {
+	var out handlers.CreateListingReqSender
+	if err := row.Scan(&out.ID, &out.Title, &out.CreatedAt); err != nil {
 		lc.logger.Error("failed to insert", "request_id", reqID, "error", err)
 		httpx.Error(w, http.StatusInternalServerError, "Something Went Wrong", httpx.Code_internal_error)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(map[string]string{"id": id})
+	_ = json.NewEncoder(w).Encode(out)
 
 }
