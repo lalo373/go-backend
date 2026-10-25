@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"backend/internal/handlers"
 	"backend/internal/httpx"
 	"backend/middlewear"
 	"database/sql"
@@ -94,7 +93,7 @@ func (lc ListingConstructor) DeleteListing(w http.ResponseWriter, r *http.Reques
 }
 
 func (lc ListingConstructor) Create(w http.ResponseWriter, r *http.Request) {
-	var req handlers.CreateListingReqReader
+	var req CreateListingReqReader
 	reqID := middlewear.RequestIDFromContext(r.Context())
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		lc.logger.Error("failed to decode", "request_id", reqID, "error", err)
@@ -110,8 +109,8 @@ func (lc ListingConstructor) Create(w http.ResponseWriter, r *http.Request) {
 	row := lc.db.QueryRowContext(r.Context(), `
 		INSERT INTO listings
 		(title, description, price, city)
-		VALUES ($1, $2, $3, $4) RETURNING id`, req.Title, req.Description, req.Price, req.City)
-	var out handlers.CreateListingReqSender
+		VALUES ($1, $2, $3, $4) RETURNING id, title, created_at`, req.Title, req.Description, req.Price, req.City)
+	var out CreateListingReqSender
 	if err := row.Scan(&out.ID, &out.Title, &out.CreatedAt); err != nil {
 		lc.logger.Error("failed to insert", "request_id", reqID, "error", err)
 		httpx.Error(w, http.StatusInternalServerError, "Something Went Wrong", httpx.Code_internal_error)
