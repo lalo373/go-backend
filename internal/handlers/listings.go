@@ -64,7 +64,7 @@ func (lc ListingConstructor) ListingsHandler(w http.ResponseWriter, r *http.Requ
 	}
 	if err := rows.Err(); err != nil {
 		slog.Error("rows.err", "err", err)
-		httpx.Error(w, http.StatusInternalServerError, "Internal error", httpx.Code_internal_error)
+		httpx.Error(w, http.StatusUnprocessableEntity, "Internal error", httpx.Code_internal_error)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -105,6 +105,9 @@ func (lc ListingConstructor) Create(w http.ResponseWriter, r *http.Request) {
 			"title, description, price and city are required; send keys ad-title, ad-description, ad-price, ad-city",
 			httpx.Code_validation_failed)
 		return
+	}
+	if err := req.ValidateTitle(); err != nil {
+		httpx.Error(w, http.StatusBadRequest, req.ValidateTitle().Error(), httpx.Code_validation_failed)
 	}
 	row := lc.db.QueryRowContext(r.Context(), `
 		INSERT INTO listings
