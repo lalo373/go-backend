@@ -5,6 +5,7 @@ import (
 	"backend/middlewear"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"log"
 	"log/slog"
 	"net/http"
@@ -107,7 +108,10 @@ func (lc ListingConstructor) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := req.ValidateTitle(); err != nil {
-		httpx.Error(w, http.StatusBadRequest, req.ValidateTitle().Error(), httpx.Code_validation_failed)
+		var validErr ValidateErrorMsg
+		errors.As(err, &validErr)
+		httpx.ValidationError(w, http.StatusBadRequest, req.ValidateTitle().Error(), httpx.Code_validation_failed, validErr.Field)
+		return
 	}
 	row := lc.db.QueryRowContext(r.Context(), `
 		INSERT INTO listings
