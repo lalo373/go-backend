@@ -32,3 +32,24 @@ func (req CreateListingReqReader) ValidateTitle() error {
 	}
 	return nil
 }
+
+func (req CreateListingReqReader) ValidateDescription() error {
+	if strings.TrimSpace(req.Description) == "" {
+		return ValidateErrorMsg{Field: "Description", Msg: "Empty Description, Include Description"}
+	}
+	return nil
+}
+
+func (req CreateListingReqReader) ValidatePrice() error {
+	if req.Price <= 0 {
+		return ValidateErrorMsg{Field: "Price", Msg: "Empty Price, Include Price"}
+	}
+	return nil
+}
+
+func (req CreateListingReqReader) ValidateCity() error {
+	if strings.TrimSpace(req.City) == "" {
+		return ValidateErrorMsg{Field: "title", Msg: "Empty Title, Include Title"}
+	}
+	return nil
+}
